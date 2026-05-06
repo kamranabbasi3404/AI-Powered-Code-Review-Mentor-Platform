@@ -26,7 +26,7 @@ export default function ShareModal({ shareId, onClose }) {
           Share your code review results with others
         </p>
         <div className="modal-url">
-          <input readOnly value={shareUrl} />
+          <input id="share-url" name="share-url" readOnly value={shareUrl} />
           <button className="btn btn-primary" onClick={handleCopy}>
             {copied ? '✓ Copied' : 'Copy'}
           </button>

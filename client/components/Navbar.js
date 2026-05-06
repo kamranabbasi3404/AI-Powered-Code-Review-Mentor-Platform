@@ -44,6 +44,7 @@ export default function Navbar() {
             <>
               <Link href="/dashboard" className="nav-link">Dashboard</Link>
               <Link href="/review/new" className="nav-link">New Review</Link>
+              <Link href="/playground" className="nav-link">Playground</Link>
               <div className="nav-user">
                 {user.avatarUrl && (
                   <img src={user.avatarUrl} alt="" className="nav-avatar" />

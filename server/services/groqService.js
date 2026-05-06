@@ -96,4 +96,38 @@ async function analyzeCode(code, language) {
   }
 }
 
-module.exports = { analyzeCode };
+const MENTOR_SYSTEM_PROMPT = `You are an expert AI coding mentor. Your goal is to guide the user, help them understand concepts, build logic, and debug their code. 
+CRITICAL RULE: You MUST NOT provide the exact code solutions or write code for the user. Instead, give hints, explain the logic, point out where the error might be, or provide pseudo-code. Your job is to help them learn, not do the work for them.`;
+
+async function chatWithMentor(code, language, chatHistory) {
+  try {
+    const messages = [
+      { role: 'system', content: MENTOR_SYSTEM_PROMPT }
+    ];
+    
+    if (code) {
+      messages.push({ role: 'user', content: `Here is my current ${language} code:\n\n\`\`\`${language}\n${code}\n\`\`\`` });
+    }
+
+    if (chatHistory && chatHistory.length > 0) {
+      messages.push(...chatHistory.map(msg => ({
+        role: msg.role === 'user' ? 'user' : 'assistant',
+        content: msg.content
+      })));
+    }
+
+    const completion = await groq.chat.completions.create({
+      messages,
+      model: 'llama-3.3-70b-versatile',
+      temperature: 0.7,
+      max_tokens: 2048,
+    });
+
+    return completion.choices[0]?.message?.content || 'Sorry, I could not generate a response.';
+  } catch (error) {
+    console.error('Groq Mentor API Error:', error);
+    throw new Error('Failed to chat with mentor: ' + error.message);
+  }
+}
+
+module.exports = { analyzeCode, chatWithMentor };

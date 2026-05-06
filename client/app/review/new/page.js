@@ -13,10 +13,39 @@ export default function NewReviewPage() {
   const [language, setLanguage] = useState('javascript');
   const [title, setTitle] = useState('');
   const [analyzing, setAnalyzing] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) router.push('/');
   }, [user, authLoading, router]);
+
+  // Load state from localStorage on mount
+  useEffect(() => {
+    const savedCode = localStorage.getItem('review_code');
+    if (savedCode) setCode(savedCode);
+    const savedLang = localStorage.getItem('review_language');
+    if (savedLang) setLanguage(savedLang);
+    const savedTitle = localStorage.getItem('review_title');
+    if (savedTitle) setTitle(savedTitle);
+    
+    setIsLoaded(true);
+  }, []);
+
+  // Save state to localStorage whenever it changes
+  useEffect(() => {
+    if (!isLoaded) return;
+    localStorage.setItem('review_code', code);
+  }, [code, isLoaded]);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    localStorage.setItem('review_language', language);
+  }, [language, isLoaded]);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    localStorage.setItem('review_title', title);
+  }, [title, isLoaded]);
 
   const handleAnalyze = async () => {
     if (!code.trim() || code.trim() === '// Paste your code here and click "Analyze Code"') {
@@ -40,10 +69,12 @@ export default function NewReviewPage() {
     <div className="editor-page">
       <div className="editor-toolbar">
         <div className="editor-toolbar-left">
-          <select value={language} onChange={(e) => setLanguage(e.target.value)}>
+          <select id="review-language" name="review-language" value={language} onChange={(e) => setLanguage(e.target.value)}>
             {LANGUAGES.map(l => <option key={l} value={l}>{l.charAt(0).toUpperCase() + l.slice(1)}</option>)}
           </select>
           <input
+            id="review-title"
+            name="review-title"
             type="text"
             placeholder="Review title (optional)"
             value={title}
