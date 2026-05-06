@@ -15,13 +15,13 @@ export default function ShareModal({ shareId, onClose }) {
     } catch { toast.error('Failed to copy'); }
   };
 
-  const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent('Check out my AI Code Review on CodeMentor AI! 🚀')}&url=${encodeURIComponent(shareUrl)}`;
+  const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent('Check out my AI Code Review on CodeMentor AI!')}&url=${encodeURIComponent(shareUrl)}`;
   const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <h2>📤 Share Review</h2>
+        <h2>Share Review</h2>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' }}>
           Share your code review results with others
         </p>

@@ -53,7 +53,7 @@ export default function NewReviewPage() {
         <button className="btn btn-primary" onClick={handleAnalyze} disabled={analyzing}>
           {analyzing ? (
             <><div className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} /> Analyzing...</>
-          ) : '🚀 Analyze Code'}
+          ) : 'Analyze Code'}
         </button>
       </div>
       <div className="editor-container">
@@ -62,7 +62,7 @@ export default function NewReviewPage() {
       {analyzing && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 100, gap: '1rem' }}>
           <div className="spinner" style={{ width: 56, height: 56 }} />
-          <p className="loading-text" style={{ fontSize: '1.1rem' }}>🤖 AI is analyzing your code...</p>
+          <p className="loading-text" style={{ fontSize: '1.1rem' }}>AI is analyzing your code...</p>
           <p className="loading-subtext">This usually takes 5-15 seconds</p>
         </div>
       )}

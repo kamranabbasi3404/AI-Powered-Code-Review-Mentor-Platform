@@ -20,7 +20,7 @@ export default function SharedReviewPage() {
   }, [shareId]);
 
   if (loading) return <div className="loading-container"><div className="spinner" /><p className="loading-text">Loading shared review...</p></div>;
-  if (error) return <div className="loading-container"><p className="loading-text">❌ {error}</p></div>;
+  if (error) return <div className="loading-container"><p className="loading-text">{error}</p></div>;
   if (!review) return null;
 
   const author = review.userId;
@@ -41,14 +41,14 @@ export default function SharedReviewPage() {
       <ScoreCard scores={review.scores} />
 
       <div className="issues-section">
-        <h2>🔍 Issues Found ({review.issues.length})</h2>
+        <h2>Issues Found ({review.issues.length})</h2>
         <div className="issues-list">
           {review.issues.map((issue, i) => <IssueCard key={i} issue={issue} />)}
         </div>
       </div>
 
       <div className="code-display">
-        <h2>📝 Submitted Code</h2>
+        <h2>Submitted Code</h2>
         <pre><code>{review.code}</code></pre>
       </div>
     </div>

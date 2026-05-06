@@ -50,7 +50,6 @@ export default function DashboardPage() {
   if (authLoading || loading) {
     return <div className="loading-container"><div className="spinner" /><p className="loading-text">Loading dashboard...</p></div>;
   }
-
   if (!user) return null;
 
   const formatDate = (d) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -59,10 +58,13 @@ export default function DashboardPage() {
     <div className="dashboard">
       <div className="dashboard-header">
         <div>
-          <h1>Welcome back, {stats?.user?.displayName || user.username} 👋</h1>
+          <h1>Welcome back, {stats?.user?.displayName || user.username}</h1>
           <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>Here is your code review overview</p>
         </div>
-        <Link href="/review/new" className="btn btn-primary">🚀 New Review</Link>
+        <Link href="/review/new" className="btn btn-primary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Review
+        </Link>
       </div>
 
       <div className="stats-grid">
@@ -85,10 +87,12 @@ export default function DashboardPage() {
       </div>
 
       <div className="reviews-section">
-        <h2>📝 Review History</h2>
+        <h2>Review History</h2>
         {reviews.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-state-icon">📝</div>
+            <div className="empty-state-icon">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
             <h3>No reviews yet</h3>
             <p>Start your first AI code review to see results here.</p>
             <Link href="/review/new" className="btn btn-primary">Start First Review</Link>
@@ -110,16 +114,18 @@ export default function DashboardPage() {
                       {review.scores.overall}/100
                     </span>
                     <span className={`review-grade ${getGradeClass(review.scores.grade)}`}>{review.scores.grade}</span>
-                    <button className="btn btn-icon btn-danger" onClick={(e) => { e.stopPropagation(); handleDelete(review._id); }} title="Delete">🗑️</button>
+                    <button className="btn btn-icon btn-danger" onClick={(e) => { e.stopPropagation(); handleDelete(review._id); }} title="Delete">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                    </button>
                   </div>
                 </div>
               ))}
             </div>
             {pagination && pagination.pages > 1 && (
               <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '1.5rem' }}>
-                <button className="btn btn-secondary" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>← Prev</button>
+                <button className="btn btn-secondary" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Prev</button>
                 <span style={{ padding: '10px 16px', color: 'var(--text-muted)' }}>Page {page} of {pagination.pages}</span>
-                <button className="btn btn-secondary" disabled={page >= pagination.pages} onClick={() => setPage(p => p + 1)}>Next →</button>
+                <button className="btn btn-secondary" disabled={page >= pagination.pages} onClick={() => setPage(p => p + 1)}>Next</button>
               </div>
             )}
           </>

@@ -1,6 +1,7 @@
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 import { Toaster } from 'react-hot-toast';
 
 export const metadata = {
@@ -15,6 +16,7 @@ export default function RootLayout({ children }) {
         <AuthProvider>
           <Navbar />
           <main>{children}</main>
+          <Footer />
           <Toaster
             position="bottom-right"
             toastOptions={{

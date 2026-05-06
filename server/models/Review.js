@@ -3,7 +3,6 @@ const mongoose = require('mongoose');
 const issueSchema = new mongoose.Schema({
   type: {
     type: String,
-    enum: ['bug', 'security', 'performance', 'bestPractice'],
     required: true
   },
   severity: {
