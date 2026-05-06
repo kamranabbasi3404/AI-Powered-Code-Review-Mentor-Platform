@@ -205,6 +205,7 @@ export default function PlaygroundPage() {
           <div style={{ flex: 1, padding: '10px', overflow: 'hidden' }}>
             <Terminal 
               ref={terminalRef} 
+              readOnly={!isRunning}
               onInput={(data) => {
                 if (isRunning && socketRef.current) {
                   socketRef.current.emit('input', data);

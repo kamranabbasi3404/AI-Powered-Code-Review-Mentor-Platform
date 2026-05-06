@@ -50,6 +50,10 @@ const reviewSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  updatedCode: {
+    type: String,
+    default: ''
+  },
   shareId: {
     type: String,
     unique: true,

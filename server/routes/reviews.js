@@ -33,7 +33,8 @@ router.post('/', auth, async (req, res) => {
       isPublic: true,
       scores: analysis.scores,
       issues: analysis.issues,
-      summary: analysis.summary
+      summary: analysis.summary,
+      updatedCode: analysis.updatedCode
     });
 
     // Update user stats

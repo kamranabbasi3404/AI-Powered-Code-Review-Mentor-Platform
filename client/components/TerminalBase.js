@@ -3,7 +3,7 @@ import { Terminal as XTerm } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import '@xterm/xterm/css/xterm.css';
 
-export default function TerminalBase({ onInput, forwardedRef }) {
+export default function TerminalBase({ onInput, forwardedRef, readOnly }) {
   const terminalRef = useRef(null);
   const xtermRef = useRef(null);
   const fitAddonRef = useRef(null);
@@ -21,6 +21,11 @@ export default function TerminalBase({ onInput, forwardedRef }) {
   useEffect(() => {
     onInputRef.current = onInput;
   }, [onInput]);
+
+  const readOnlyRef = useRef(readOnly);
+  useEffect(() => {
+    readOnlyRef.current = readOnly;
+  }, [readOnly]);
 
   useEffect(() => {
     if (!terminalRef.current) return;
@@ -55,6 +60,8 @@ export default function TerminalBase({ onInput, forwardedRef }) {
     let inputBuffer = '';
 
     const onDataDisposable = term.onData((data) => {
+      if (readOnlyRef.current) return;
+      
       if (data === '\r') {
         // Enter pressed: echo newline, send buffered input + newline
         term.write('\r\n');

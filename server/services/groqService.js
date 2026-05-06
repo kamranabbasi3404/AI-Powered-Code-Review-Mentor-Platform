@@ -26,7 +26,8 @@ You MUST respond in EXACTLY this JSON format. Do NOT add any text before or afte
       "suggestion": "How to fix this issue",
       "codeExample": "Corrected code snippet if applicable"
     }
-  ]
+  ],
+  "updatedCode": "The fully fixed and refactored code without any markdown formatting block, just raw code string"
 }
 
 SCORING GUIDELINES:
@@ -88,7 +89,8 @@ async function analyzeCode(code, language) {
         overall,
         grade
       },
-      issues: result.issues || []
+      issues: result.issues || [],
+      updatedCode: result.updatedCode || code
     };
   } catch (error) {
     console.error('Groq API Error:', error);

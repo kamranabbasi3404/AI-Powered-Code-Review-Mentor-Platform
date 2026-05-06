@@ -16,6 +16,17 @@ export default function ReviewDetailPage() {
   const [loading, setLoading] = useState(true);
   const [showShare, setShowShare] = useState(false);
   const [filter, setFilter] = useState('all');
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyCode = () => {
+    if (!review) return;
+    const codeToCopy = review.updatedCode || review.code;
+    navigator.clipboard.writeText(codeToCopy).then(() => {
+      setCopied(true);
+      toast.success('Code copied to clipboard');
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   useEffect(() => {
     if (!authLoading && !user) { router.push('/'); return; }
@@ -71,8 +82,22 @@ export default function ReviewDetailPage() {
       </div>
 
       <div className="code-display">
-        <h2>Submitted Code</h2>
-        <pre><code>{review.code}</code></pre>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+          <h2>Updated Code (100% Fixed)</h2>
+          <button 
+            className="btn btn-secondary" 
+            onClick={handleCopyCode}
+            style={{ padding: '6px 12px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            {copied ? (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            ) : (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            )}
+            {copied ? 'Copied!' : 'Copy Code'}
+          </button>
+        </div>
+        <pre><code>{review.updatedCode || review.code}</code></pre>
       </div>
 
       {showShare && <ShareModal shareId={review.shareId} onClose={() => setShowShare(false)} />}

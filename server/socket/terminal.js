@@ -17,6 +17,7 @@ module.exports = (io) => {
 
     socket.on('run_code', async (data) => {
       const { code, language } = data;
+      const startTime = Date.now();
 
       if (!DOCKER_IMAGES[language]) {
         socket.emit('output', `Language ${language} is not supported.\r\n`);
@@ -76,6 +77,8 @@ module.exports = (io) => {
         });
 
         currentProcess.on('close', async (code) => {
+          const runTime = ((Date.now() - startTime) / 1000).toFixed(2);
+          socket.emit('output', `\r\n\x1b[38;5;240m[Process completed in ${runTime}s]\x1b[0m\r\n`);
           socket.emit('exit', code);
           try { await fs.rm(tempDir, { recursive: true, force: true }); } catch (e) {}
           currentProcess = null;
