@@ -1,11 +1,13 @@
 # 🚀 CodeMentor AI — AI-Powered Code Review & Mentor Platform
 
-> Paste your code, get instant AI reviews — bugs, security issues, performance scores, and best practices — in a beautiful, structured format.
+> Paste your code, get instant AI reviews — bugs, security issues, performance scores, and best practices. Write multi-file projects, run them in Docker, and chat with an AI mentor — all in a beautiful, premium interface.
 
 ![Next.js](https://img.shields.io/badge/Next.js-14-black?logo=next.js)
 ![Express](https://img.shields.io/badge/Express-4-green?logo=express)
 ![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-brightgreen?logo=mongodb)
 ![Groq](https://img.shields.io/badge/Groq-AI-blue)
+![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?logo=docker)
+![Monaco](https://img.shields.io/badge/Monaco-Editor-purple)
 
 ---
 
@@ -46,13 +48,26 @@
 
 ## ✨ Features
 
-- **🤖 AI Code Review** — Groq AI (Llama 3.3 70B) analyzes your code instantly
-- **🎓 AI Code Mentor** — Chat with an AI mentor for logic guidance and debugging help
-- **💻 Code Playground** — Write, run, and chat in a unified split-pane interface
-- **🖥️ Interactive Terminal** — Real-time code execution with WebSockets and xterm.js
+### 🧠 AI-Powered Analysis
+- **🤖 AI Code Review** — Groq AI (Llama 3.3 70B) analyzes your code instantly with detailed feedback
+- **🎓 AI Code Mentor** — Chat with an AI mentor for logic guidance and debugging help (no direct answers — teaches you to think!)
 - **📊 Code Score Card** — Quality, Security, Performance, Best Practices (0-100) + Overall Grade
 - **🐛 Issue Cards** — Bugs with severity badges (Critical 🔴 / Warning 🟡 / Info 🔵)
-- **📝 VS Code Editor** — Monaco Editor with syntax highlighting for 20+ languages
+
+### 💻 Code Playground & Workspace
+- **📁 Multi-File Workspace** — Create, edit, and manage multiple files with a VS Code-style Explorer sidebar
+- **🌐 Language-Aware Reset** — Switching language auto-resets workspace with correct default file (`main.cpp`, `main.py`, etc.)
+- **🖥️ Interactive Terminal** — Real-time Docker-based code execution with WebSockets and xterm.js
+- **🐳 Docker Sandboxed Execution** — Code runs safely inside isolated Docker containers (JS, Python, C++, Java)
+- **📝 Monaco Editor** — Full VS Code editor experience with syntax highlighting for 20+ languages
+- **↔️ Resizable Terminal** — Drag to resize terminal height, just like VS Code
+
+### 🔍 Code Diff & Review
+- **🔀 Monaco Diff Editor** — Side-by-side visual diff comparison between your original code and AI-fixed code
+- **📋 Copy Fix** — One-click copy of AI-corrected code with professional toast notifications
+- **🔄 Toggle View** — Switch between Diff View and Code View modes
+
+### 🔐 Auth & Sharing
 - **🔐 GitHub OAuth** — Sign in with GitHub, track your review history
 - **📈 Dashboard** — View all past reviews, stats, and scores at a glance
 - **🔗 Shareable Links** — Every review gets a public link for LinkedIn/Twitter
@@ -63,8 +78,9 @@
 | Layer | Technology |
 |-------|-----------|
 | Frontend | Next.js 14 (App Router) |
-| Code Editor | Monaco Editor |
+| Code Editor | Monaco Editor + Diff Editor |
 | Terminal | xterm.js + WebSockets |
+| Code Execution | Docker (Sandboxed Containers) |
 | Backend | Node.js + Express.js + Socket.io |
 | AI Engine | Groq API (Llama 3.3 70B) |
 | Database | MongoDB Atlas + Mongoose |
@@ -75,6 +91,7 @@
 
 ### Prerequisites
 - Node.js 18+
+- Docker Desktop (for code execution)
 - MongoDB Atlas account
 - GitHub OAuth App
 - Groq API key (free at [console.groq.com](https://console.groq.com))
