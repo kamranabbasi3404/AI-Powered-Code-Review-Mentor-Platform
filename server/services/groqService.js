@@ -54,20 +54,39 @@ async function analyzeCode(code, language) {
   try {
     const userPrompt = `Analyze this ${language} code and provide a comprehensive review:\n\n\`\`\`${language}\n${code}\n\`\`\``;
 
-    const completion = await groq.chat.completions.create({
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: userPrompt }
-      ],
-      model: 'llama-3.3-70b-versatile',
-      temperature: 0.3,
-      max_tokens: 4096,
-      response_format: { type: 'json_object' }
-    });
+    const MODELS = [
+      'llama-3.3-70b-versatile',
+      'llama-3.1-8b-instant',
+      'mixtral-8x7b-32768'
+    ];
 
-    const responseText = completion.choices[0]?.message?.content;
+    let responseText = null;
+    let lastError = null;
+
+    for (const model of MODELS) {
+      try {
+        const completion = await groq.chat.completions.create({
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'user', content: userPrompt }
+          ],
+          model: model,
+          temperature: 0.3,
+          max_tokens: 4096,
+          response_format: { type: 'json_object' }
+        });
+        
+        responseText = completion.choices[0]?.message?.content;
+        if (responseText) break; // Success
+      } catch (err) {
+        lastError = err;
+        console.warn(`[Groq] Model ${model} failed: ${err.message}. Trying next...`);
+        // If it's not a rate limit error, we might still want to try the next model just in case.
+      }
+    }
+
     if (!responseText) {
-      throw new Error('No response from AI');
+      throw lastError || new Error('No response from AI');
     }
 
     const result = JSON.parse(responseText);
@@ -125,14 +144,37 @@ async function chatWithMentor(code, language, chatHistory) {
       })));
     }
 
-    const completion = await groq.chat.completions.create({
-      messages,
-      model: 'llama-3.3-70b-versatile',
-      temperature: 0.7,
-      max_tokens: 2048,
-    });
+    const MODELS = [
+      'llama-3.3-70b-versatile',
+      'llama-3.1-8b-instant',
+      'mixtral-8x7b-32768'
+    ];
 
-    return completion.choices[0]?.message?.content || 'Sorry, I could not generate a response.';
+    let responseText = null;
+    let lastError = null;
+
+    for (const model of MODELS) {
+      try {
+        const completion = await groq.chat.completions.create({
+          messages,
+          model: model,
+          temperature: 0.7,
+          max_tokens: 2048,
+        });
+        
+        responseText = completion.choices[0]?.message?.content;
+        if (responseText) break;
+      } catch (err) {
+        lastError = err;
+        console.warn(`[Groq Mentor] Model ${model} failed: ${err.message}. Trying next...`);
+      }
+    }
+
+    if (!responseText) {
+      throw lastError || new Error('No response from AI');
+    }
+
+    return responseText;
   } catch (error) {
     console.error('Groq Mentor API Error:', error);
     throw new Error('Failed to chat with mentor: ' + error.message);
