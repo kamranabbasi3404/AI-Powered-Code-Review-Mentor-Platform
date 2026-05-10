@@ -56,9 +56,7 @@ async function analyzeCode(code, language) {
 
     const MODELS = [
       'llama-3.3-70b-versatile',
-      'llama3-8b-8192',
-      'gemma2-9b-it',
-      'llama3-70b-8192'
+      'llama-3.1-8b-instant'
     ];
 
     let responseText = null;
@@ -147,9 +145,7 @@ async function chatWithMentor(code, language, chatHistory) {
 
     const MODELS = [
       'llama-3.3-70b-versatile',
-      'llama3-8b-8192',
-      'gemma2-9b-it',
-      'llama3-70b-8192'
+      'llama-3.1-8b-instant'
     ];
 
     let responseText = null;
