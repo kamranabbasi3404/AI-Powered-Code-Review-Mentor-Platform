@@ -61,6 +61,22 @@ export default function PlaygroundPage() {
   // Available languages for playground
   const PLAYGROUND_LANGUAGES = ['javascript', 'python', 'java', 'cpp'];
 
+  const DEFAULT_FILES = {
+    javascript: { name: 'main.js', content: '// Write your code here\n' },
+    python: { name: 'main.py', content: '# Write your code here\n' },
+    java: { name: 'Main.java', content: '// Write your code here\n' },
+    cpp: { name: 'main.cpp', content: '// Write your code here\n' },
+  };
+
+  const handleLanguageChange = (newLang) => {
+    if (newLang === language) return;
+    const defaultFile = DEFAULT_FILES[newLang];
+    const newFile = { id: Date.now().toString(), name: defaultFile.name, content: defaultFile.content };
+    setFiles([newFile]);
+    setActiveFileId(newFile.id);
+    setLanguage(newLang);
+  };
+
   useEffect(() => {
     if (!authLoading && !user) router.push('/');
   }, [user, authLoading, router]);
@@ -281,7 +297,7 @@ export default function PlaygroundPage() {
                 id="playground-language"
                 name="playground-language"
                 value={language} 
-                onChange={(e) => setLanguage(e.target.value)}
+                onChange={(e) => handleLanguageChange(e.target.value)}
                 style={{ background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border)', padding: '6px 12px', borderRadius: '6px', outline: 'none' }}
               >
                 {PLAYGROUND_LANGUAGES.map(l => (
