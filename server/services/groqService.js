@@ -27,7 +27,7 @@ You MUST respond in EXACTLY this JSON format. Do NOT add any text before or afte
       "codeExample": "Corrected code snippet if applicable"
     }
   ],
-  "updatedCode": "The fully fixed, refactored, and optimized code. This MUST be a perfect 100/100 score code. No markdown formatting blocks, just the raw code string."
+  "updatedCode": "The fully fixed, refactored, and optimized code. MUST preserve exact line breaks and indentation using \\n. Do NOT minify. No markdown blocks, just raw code string."
 }
 
 SCORING GUIDELINES:
@@ -41,7 +41,14 @@ SEVERITY GUIDELINES:
 - warning: Performance issues, potential bugs, poor patterns that could cause problems
 - info: Style improvements, minor optimizations, suggestions for better practices
 
-Be thorough but fair. If the provided code is already perfect or excellent, you MUST give a 100 score in all categories and return an empty array [] for issues. Do NOT artificially invent issues. The updatedCode MUST be the absolute best, most optimal version of the code that would score 100/100 on subsequent analysis. Always return valid JSON.`;
+Be thorough but fair. If the provided code is already perfect or excellent, you MUST give a 100 score in all categories and return an empty array [] for issues. Do NOT artificially invent issues.
+
+CRITICAL RULES FOR updatedCode:
+1. You MUST return the ENTIRE, complete code with your fixes applied.
+2. NEVER use placeholders like "// rest of the code" or "/* unchanged */".
+3. NEVER truncate, shorten, or remove valid logic from the original code. 
+4. If no fixes are needed, return the exact original code unmodified.
+5. Always return valid JSON.`;
 
 async function analyzeCode(code, language) {
   try {
@@ -90,7 +97,7 @@ async function analyzeCode(code, language) {
         grade
       },
       issues: result.issues || [],
-      updatedCode: result.updatedCode || code
+      updatedCode: (result.updatedCode || code).replace(/^```[\w]*\n/g, '').replace(/\n```$/g, '')
     };
   } catch (error) {
     console.error('Groq API Error:', error);
