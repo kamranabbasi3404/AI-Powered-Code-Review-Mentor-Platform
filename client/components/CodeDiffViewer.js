@@ -65,7 +65,7 @@ export default function CodeDiffViewer({ originalCode, modifiedCode, language })
             }}
           />
         ) : (
-          <pre style={{ margin: 0, height: '100%', overflow: 'auto', padding: '15px' }}>
+          <pre style={{ margin: 0, height: '100%', overflow: 'auto', padding: '15px', whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>
             <code>{modifiedCode}</code>
           </pre>
         )}
