@@ -118,7 +118,7 @@ router.get('/me', async (req, res) => {
 
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.userId).select('-__v');
+    const user = await User.findById(decoded.userId).select('-__v -accessToken');
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });

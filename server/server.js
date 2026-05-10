@@ -23,6 +23,23 @@ const io = new Server(server, {
   }
 });
 
+const jwt = require('jsonwebtoken');
+
+// Socket.IO authentication middleware
+io.use((socket, next) => {
+  const token = socket.handshake.auth?.token;
+  if (!token) {
+    return next(new Error('Authentication required'));
+  }
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    socket.user = decoded;
+    next();
+  } catch (err) {
+    next(new Error('Invalid token'));
+  }
+});
+
 require('./socket/terminal')(io);
 
 // Connect to MongoDB
@@ -34,6 +51,22 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
+
+// Rate limiting
+const rateLimit = require('express-rate-limit');
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // 100 requests per window
+  message: { error: 'Too many requests, please try again later.' }
+});
+const aiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20, // AI endpoints are expensive — 20 per 15 min
+  message: { error: 'Too many AI requests, please try again later.' }
+});
+app.use('/api/reviews', apiLimiter);
+app.use('/api/ai', aiLimiter);
+app.use('/api/execute', apiLimiter);
 
 // Routes
 app.use('/api/auth', authRoutes);

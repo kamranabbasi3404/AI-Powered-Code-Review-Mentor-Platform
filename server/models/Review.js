@@ -81,7 +81,6 @@ const reviewSchema = new mongoose.Schema({
 });
 
 // Index for fast lookups
-reviewSchema.index({ shareId: 1 });
 reviewSchema.index({ userId: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Review', reviewSchema);

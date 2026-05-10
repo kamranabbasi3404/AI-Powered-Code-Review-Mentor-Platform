@@ -3,22 +3,19 @@ const fs = require('fs').promises;
 const path = require('path');
 const { nanoid } = require('nanoid');
 
-const DOCKER_IMAGES = {
-  python: 'python:3.10-alpine',
-  javascript: 'node:18-alpine',
-  java: 'eclipse-temurin:17-alpine',
-  cpp: 'gcc:12'
-};
+const { DOCKER_IMAGES } = require('../config/docker');
+
+const isDev = process.env.NODE_ENV !== 'production';
 
 module.exports = (io) => {
-  console.log('[Terminal] Socket handler registered!');
+  if (isDev) console.log('[Terminal] Socket handler registered!');
   io.on('connection', (socket) => {
-    console.log('[Terminal] New socket connection:', socket.id);
+    if (isDev) console.log('[Terminal] New socket connection:', socket.id);
     let currentProcess = null;
     let currentTempDir = null;
 
     socket.on('run_code', async (data) => {
-      console.log('[Terminal] run_code received!', { language: data.language, hasFiles: !!data.files, filesCount: data.files?.length, codeLen: data.code?.length });
+      if (isDev) console.log('[Terminal] run_code received!', { language: data.language, filesCount: data.files?.length });
       const { code, files, language } = data;
       const startTime = Date.now();
 
@@ -65,15 +62,15 @@ module.exports = (io) => {
           for (const file of files) {
             // sanitize filename to prevent directory traversal
             const safeName = path.basename(file.name);
-            console.log(`[Terminal] Writing file: ${safeName} (${file.content.length} chars)`);
+            if (isDev) console.log(`[Terminal] Writing file: ${safeName} (${file.content.length} chars)`);
             await fs.writeFile(path.join(tempDir, safeName), file.content);
           }
         } else {
-          console.log(`[Terminal] Writing single file: ${defaultFileName}`);
+          if (isDev) console.log(`[Terminal] Writing single file: ${defaultFileName}`);
           await fs.writeFile(path.join(tempDir, defaultFileName), code || '');
         }
 
-        console.log(`[Terminal] Spawning: ${cmd} ${args.join(' ')}`);
+        if (isDev) console.log(`[Terminal] Spawning: ${cmd} ${args.join(' ')}`);
         currentProcess = spawn(cmd, args);
 
         currentProcess.stdout.on('data', (data) => {

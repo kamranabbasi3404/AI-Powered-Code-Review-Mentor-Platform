@@ -5,15 +5,11 @@ const path = require('path');
 const { nanoid } = require('nanoid');
 
 const router = express.Router();
+const auth = require('../middleware/auth');
 
-const DOCKER_IMAGES = {
-  python: 'python:3.10-alpine',
-  javascript: 'node:18-alpine',
-  java: 'eclipse-temurin:17-alpine',
-  cpp: 'gcc:12' // Note: For C++ you might need standard gcc
-};
+const { DOCKER_IMAGES } = require('../config/docker');
 
-router.post('/', async (req, res) => {
+router.post('/', auth, async (req, res) => {
   const { code, language, stdin } = req.body;
 
   if (!DOCKER_IMAGES[language]) {

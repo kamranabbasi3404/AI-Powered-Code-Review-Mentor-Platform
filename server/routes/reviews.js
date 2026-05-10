@@ -4,6 +4,7 @@ const auth = require('../middleware/auth');
 const Review = require('../models/Review');
 const User = require('../models/User');
 const { analyzeCode } = require('../services/groqService');
+const { updateUserStats } = require('../services/userStats');
 
 const router = express.Router();
 
@@ -38,13 +39,7 @@ router.post('/', auth, async (req, res) => {
     });
 
     // Update user stats
-    const userReviews = await Review.find({ userId: req.user.userId });
-    const totalReviews = userReviews.length;
-    const avgScore = Math.round(
-      userReviews.reduce((sum, r) => sum + r.scores.overall, 0) / totalReviews
-    );
-
-    await User.findByIdAndUpdate(req.user.userId, { totalReviews, avgScore });
+    await updateUserStats(req.user.userId);
 
     res.status(201).json(review);
   } catch (error) {
@@ -134,13 +129,7 @@ router.delete('/:id', auth, async (req, res) => {
     }
 
     // Update user stats
-    const userReviews = await Review.find({ userId: req.user.userId });
-    const totalReviews = userReviews.length;
-    const avgScore = totalReviews > 0
-      ? Math.round(userReviews.reduce((sum, r) => sum + r.scores.overall, 0) / totalReviews)
-      : 0;
-
-    await User.findByIdAndUpdate(req.user.userId, { totalReviews, avgScore });
+    await updateUserStats(req.user.userId);
 
     res.json({ message: 'Review deleted successfully' });
   } catch (error) {
