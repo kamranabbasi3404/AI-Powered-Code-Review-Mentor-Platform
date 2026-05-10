@@ -9,7 +9,7 @@ const router = express.Router();
 router.get('/github', (req, res) => {
   const clientId = process.env.GITHUB_CLIENT_ID;
   const redirectUri = process.env.GITHUB_CALLBACK_URL;
-  const scope = 'read:user user:email';
+  const scope = 'read:user user:email repo';
   const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}`;
   res.json({ url: githubAuthUrl });
 });
@@ -78,7 +78,8 @@ router.get('/github/callback', async (req, res) => {
         displayName: githubUser.name || githubUser.login,
         email: email || '',
         avatarUrl: githubUser.avatar_url,
-        profileUrl: githubUser.html_url
+        profileUrl: githubUser.html_url,
+        accessToken: tokenData.access_token
       });
     } else {
       user.username = githubUser.login;
@@ -86,6 +87,7 @@ router.get('/github/callback', async (req, res) => {
       user.email = email || user.email;
       user.avatarUrl = githubUser.avatar_url;
       user.profileUrl = githubUser.html_url;
+      user.accessToken = tokenData.access_token;
       await user.save();
     }
 

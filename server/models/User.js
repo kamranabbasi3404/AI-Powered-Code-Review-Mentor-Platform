@@ -26,6 +26,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  accessToken: {
+    type: String,
+    default: ''
+  },
   totalReviews: {
     type: Number,
     default: 0

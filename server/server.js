@@ -11,6 +11,7 @@ const reviewRoutes = require('./routes/reviews');
 const userRoutes = require('./routes/users');
 const aiRoutes = require('./routes/ai');
 const executeRoutes = require('./routes/execute');
+const githubRoutes = require('./routes/github');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -40,6 +41,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/execute', executeRoutes);
+app.use('/api/github', githubRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
