@@ -15,6 +15,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState(null);
+  const [deleteReviewId, setDeleteReviewId] = useState(null);
 
   useEffect(() => {
     if (!authLoading && !user) router.push('/');
@@ -38,13 +39,18 @@ export default function DashboardPage() {
     fetchData();
   }, [user, page]);
 
-  const handleDelete = async (id) => {
-    if (!confirm('Delete this review?')) return;
+  const handleDeleteClick = (id) => {
+    setDeleteReviewId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteReviewId) return;
     try {
-      await apiDelete(`/reviews/${id}`);
-      setReviews(reviews.filter(r => r._id !== id));
+      await apiDelete(`/reviews/${deleteReviewId}`);
+      setReviews(reviews.filter(r => r._id !== deleteReviewId));
       toast.success('Review deleted');
     } catch { toast.error('Failed to delete'); }
+    setDeleteReviewId(null);
   };
 
   if (authLoading || loading) {
@@ -114,7 +120,7 @@ export default function DashboardPage() {
                       {review.scores.overall}/100
                     </span>
                     <span className={`review-grade ${getGradeClass(review.scores.grade)}`}>{review.scores.grade}</span>
-                    <button className="btn btn-icon btn-danger" onClick={(e) => { e.stopPropagation(); handleDelete(review._id); }} title="Delete">
+                    <button className="btn btn-icon btn-danger" onClick={(e) => { e.stopPropagation(); handleDeleteClick(review._id); }} title="Delete">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
                     </button>
                   </div>
@@ -131,6 +137,21 @@ export default function DashboardPage() {
           </>
         )}
       </div>
+
+      {deleteReviewId && (
+        <div className="modal-overlay" onClick={() => setDeleteReviewId(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>Delete Review</h2>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', marginTop: '0.5rem' }}>
+              Are you sure you want to delete this review? This action cannot be undone.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button className="btn btn-secondary" onClick={() => setDeleteReviewId(null)}>Cancel</button>
+              <button className="btn btn-danger" onClick={confirmDelete} style={{ background: 'var(--danger)', color: '#fff', border: 'none' }}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

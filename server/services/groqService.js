@@ -27,7 +27,7 @@ You MUST respond in EXACTLY this JSON format. Do NOT add any text before or afte
       "codeExample": "Corrected code snippet if applicable"
     }
   ],
-  "updatedCode": "The fully fixed and refactored code without any markdown formatting block, just raw code string"
+  "updatedCode": "The fully fixed, refactored, and optimized code. This MUST be a perfect 100/100 score code. No markdown formatting blocks, just the raw code string."
 }
 
 SCORING GUIDELINES:
@@ -41,7 +41,7 @@ SEVERITY GUIDELINES:
 - warning: Performance issues, potential bugs, poor patterns that could cause problems
 - info: Style improvements, minor optimizations, suggestions for better practices
 
-Be thorough but fair. If code is good, give high scores. Always find at least 1-2 suggestions for improvement. Always return valid JSON.`;
+Be thorough but fair. If the provided code is already perfect or excellent, you MUST give a 100 score in all categories and return an empty array [] for issues. Do NOT artificially invent issues. The updatedCode MUST be the absolute best, most optimal version of the code that would score 100/100 on subsequent analysis. Always return valid JSON.`;
 
 async function analyzeCode(code, language) {
   try {

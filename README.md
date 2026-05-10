@@ -11,25 +11,27 @@
 
 ## 🏗️ Architecture
 
-```
-┌─────────────────────────────────────────────────┐
-│                  Next.js 14 Frontend            │
-│  ┌──────────┐ ┌──────────┐ ┌─────────────────┐  │
-│  │  Landing  │ │Dashboard │ │ Code Editor     │  │
-│  │  Page     │ │  + Stats │ │ (Monaco/VSCode) │  │
-│  └──────────┘ └──────────┘ └─────────────────┘  │
-│  ┌──────────────────┐ ┌──────────────────────┐   │
-│  │ Review Results   │ │ Share Public Link    │   │
-│  │ + Score Card     │ │ (Twitter/LinkedIn)   │   │
-│  └──────────────────┘ └──────────────────────┘   │
-└────────────────────┬────────────────────────────┘
-                     │ REST API
-┌────────────────────▼────────────────────────────┐
-│              Express.js Backend                  │
-│  ┌──────────┐ ┌──────────┐ ┌─────────────────┐  │
-│  │  GitHub   │ │  Review  │ │  Groq AI        │  │
-│  │  OAuth    │ │  CRUD    │ │  Service        │  │
-│  └──────────┘ └──────────┘ └─────────────────┘  │
+┌────────────────────────────────────────────────────────┐
+│                  Next.js 14 Frontend                   │
+│  ┌──────────┐ ┌──────────┐ ┌───────────────────────┐   │
+│  │  Landing │ │Dashboard │ │ Code Playground       │   │
+│  │  Page    │ │  + Stats │ │ (Editor + Terminal +  │   │
+│  └──────────┘ └──────────┘ │  AI Mentor Chat)      │   │
+│  ┌──────────────────┐ ┌────┴───────────────────┐   │   │
+│  │ Review Results   │ │ Share Public Link      │   │   │
+│  │ + Score Card     │ │ (Twitter/LinkedIn)     │   │   │
+│  └──────────────────┘ └────────────────────────┘   │   │
+└────────────────────┬───────────────────────────────┘
+                     │ REST API / WebSockets
+┌────────────────────▼───────────────────────────────┐
+│              Express.js Backend                    │
+│  ┌──────────┐ ┌──────────┐ ┌───────────────────┐   │
+│  │  GitHub  │ │  Review  │ │ Groq AI Service   │   │
+│  │  OAuth   │ │  CRUD    │ │ (Review/Mentor)   │   │
+│  └──────────┘ └──────────┘ └───────────────────┘   │
+│  ┌─────────────────────────────────────────────┐   │
+│  │  WebSocket Server (Interactive Terminal)    │   │
+│  └─────────────────────────────────────────────┘   │
 └────────────────────┬────────────────────────────┘
                      │
 ┌────────────────────▼────────────────────────────┐
@@ -44,11 +46,14 @@
 ## ✨ Features
 
 - **🤖 AI Code Review** — Groq AI (Llama 3.3 70B) analyzes your code instantly
+- **🎓 AI Code Mentor** — Chat with an AI mentor for logic guidance and debugging help
+- **💻 Code Playground** — Write, run, and chat in a unified split-pane interface
+- **🖥️ Interactive Terminal** — Real-time code execution with WebSockets and xterm.js
 - **📊 Code Score Card** — Quality, Security, Performance, Best Practices (0-100) + Overall Grade
 - **🐛 Issue Cards** — Bugs with severity badges (Critical 🔴 / Warning 🟡 / Info 🔵)
-- **💻 VS Code Editor** — Monaco Editor with syntax highlighting for 20+ languages
+- **📝 VS Code Editor** — Monaco Editor with syntax highlighting for 20+ languages
 - **🔐 GitHub OAuth** — Sign in with GitHub, track your review history
-- **📊 Dashboard** — View all past reviews, stats, and scores at a glance
+- **📈 Dashboard** — View all past reviews, stats, and scores at a glance
 - **🔗 Shareable Links** — Every review gets a public link for LinkedIn/Twitter
 - **🌙 Dark Theme** — Premium dark UI with glassmorphism effects
 
@@ -58,7 +63,8 @@
 |-------|-----------|
 | Frontend | Next.js 14 (App Router) |
 | Code Editor | Monaco Editor |
-| Backend | Node.js + Express.js |
+| Terminal | xterm.js + WebSockets |
+| Backend | Node.js + Express.js + Socket.io |
 | AI Engine | Groq API (Llama 3.3 70B) |
 | Database | MongoDB Atlas + Mongoose |
 | Auth | GitHub OAuth 2.0 + JWT |
@@ -124,6 +130,7 @@ Open [http://localhost:3000](http://localhost:3000) 🎉
 │   ├── app/
 │   │   ├── page.js          # Landing page
 │   │   ├── dashboard/       # User dashboard
+│   │   ├── playground/      # Interactive Code Playground
 │   │   ├── review/new/      # Code editor + review
 │   │   ├── review/[id]/     # Review results
 │   │   └── review/shared/   # Public shared reviews
@@ -135,7 +142,9 @@ Open [http://localhost:3000](http://localhost:3000) 🎉
 │   ├── middleware/           # JWT auth
 │   ├── models/              # Mongoose schemas
 │   ├── routes/              # API routes
-│   └── services/            # Groq AI service
+│   ├── services/            # Groq AI service
+│   ├── socket/              # WebSocket logic for terminal
+│   └── server.js            # Main entry point
 └── README.md
 ```
 
