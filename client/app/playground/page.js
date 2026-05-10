@@ -38,9 +38,11 @@ export default function PlaygroundPage() {
 
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     const socketUrl = apiUrl.replace(/\/api\/?$/, '');
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
     
     const socket = io(socketUrl, {
-      withCredentials: true
+      withCredentials: true,
+      auth: { token }
     });
     socketRef.current = socket;
 
@@ -84,56 +86,10 @@ export default function PlaygroundPage() {
     if (!authLoading && !user) router.push('/');
   }, [user, authLoading, router]);
 
-  // Load state from sessionStorage on mount
+  // Set loaded state on mount
   useEffect(() => {
-    const savedFiles = sessionStorage.getItem('playground_files');
-    if (savedFiles) {
-      try {
-        const parsed = JSON.parse(savedFiles);
-        if (parsed && parsed.length > 0) setFiles(parsed);
-      } catch(e) {}
-    } else {
-      const savedCode = sessionStorage.getItem('playground_code');
-      if (savedCode) setFiles([{ id: '1', name: 'main.js', content: savedCode }]);
-    }
-    
-    const savedActiveId = sessionStorage.getItem('playground_active_file');
-    if (savedActiveId) setActiveFileId(savedActiveId);
-    
-    const savedLang = sessionStorage.getItem('playground_language');
-    if (savedLang) setLanguage(savedLang);
-    
-    const savedMsgs = sessionStorage.getItem('playground_messages');
-    if (savedMsgs) {
-      try { setMessages(JSON.parse(savedMsgs)); } catch (e) {}
-    }
-    const savedHeight = sessionStorage.getItem('playground_terminal_height');
-    if (savedHeight) setTerminalHeight(parseInt(savedHeight, 10));
-    
     setIsLoaded(true);
   }, []);
-
-  // Save state to sessionStorage whenever it changes
-  useEffect(() => {
-    if (!isLoaded) return;
-    sessionStorage.setItem('playground_files', JSON.stringify(files));
-    sessionStorage.setItem('playground_active_file', activeFileId);
-  }, [files, activeFileId, isLoaded]);
-
-  useEffect(() => {
-    if (!isLoaded) return;
-    sessionStorage.setItem('playground_language', language);
-  }, [language, isLoaded]);
-
-  useEffect(() => {
-    if (!isLoaded) return;
-    sessionStorage.setItem('playground_messages', JSON.stringify(messages));
-  }, [messages, isLoaded]);
-
-  useEffect(() => {
-    if (!isLoaded) return;
-    sessionStorage.setItem('playground_terminal_height', terminalHeight.toString());
-  }, [terminalHeight, isLoaded]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -250,9 +206,9 @@ export default function PlaygroundPage() {
 
   return (
     <>
-    <div className="playground-layout">
+    <div className="playground-layout" style={{ display: 'flex', flexDirection: 'row', width: '100%' }}>
       {/* LEFT: Workspace (Sidebar + Editor) */}
-      <div className="playground-left" style={{ flexDirection: 'row' }}>
+      <div className="playground-left" style={{ flexDirection: 'row', minWidth: 0 }}>
         
         {/* Workspace Sidebar */}
         <div style={{ width: '220px', borderRight: '1px solid var(--border)', background: 'var(--bg-tertiary)', display: 'flex', flexDirection: 'column' }}>
@@ -374,11 +330,9 @@ export default function PlaygroundPage() {
           </div>
         </div>
       )}
-    </div>
-
-    {/* RIGHT: AI Mentor Chat (Outside layout for proper positioning) */}
-    {showChat && (
-      <div className="playground-right" style={{ position: 'fixed', top: '64px', right: 0, bottom: 0, zIndex: 40, width: `${chatWidth}px` }}>
+      {/* RIGHT: AI Mentor Chat */}
+      {showChat && (
+        <div className="playground-right" style={{ width: `${chatWidth}px`, position: 'relative', zIndex: 10, flexShrink: 0 }}>
         {/* Resize Handle */}
         <div 
           style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '5px', cursor: 'col-resize', background: 'transparent', zIndex: 5 }}
@@ -451,7 +405,8 @@ export default function PlaygroundPage() {
           </div>
         </div>
       </div>
-    )}
+      )}
+    </div>
 
     {/* Floating AI Mentor Toggle Button */}
     {!showChat && (
