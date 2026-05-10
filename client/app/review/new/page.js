@@ -14,40 +14,21 @@ export default function NewReviewPage() {
   const [language, setLanguage] = useState('javascript');
   const [title, setTitle] = useState('');
   const [analyzing, setAnalyzing] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
   const [showGitHub, setShowGitHub] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) router.push('/');
   }, [user, authLoading, router]);
 
-  // Load state from sessionStorage on mount
+  // Clear any old saved state on mount (fresh start every visit)
   useEffect(() => {
-    const savedCode = sessionStorage.getItem('review_code');
-    if (savedCode) setCode(savedCode);
-    const savedLang = sessionStorage.getItem('review_language');
-    if (savedLang) setLanguage(savedLang);
-    const savedTitle = sessionStorage.getItem('review_title');
-    if (savedTitle) setTitle(savedTitle);
-    
-    setIsLoaded(true);
+    sessionStorage.removeItem('review_code');
+    sessionStorage.removeItem('review_language');
+    sessionStorage.removeItem('review_title');
+    localStorage.removeItem('review_code');
+    localStorage.removeItem('review_language');
+    localStorage.removeItem('review_title');
   }, []);
-
-  // Save state to sessionStorage whenever it changes
-  useEffect(() => {
-    if (!isLoaded) return;
-    sessionStorage.setItem('review_code', code);
-  }, [code, isLoaded]);
-
-  useEffect(() => {
-    if (!isLoaded) return;
-    sessionStorage.setItem('review_language', language);
-  }, [language, isLoaded]);
-
-  useEffect(() => {
-    if (!isLoaded) return;
-    sessionStorage.setItem('review_title', title);
-  }, [title, isLoaded]);
 
   const handleAnalyze = async () => {
     if (!code.trim() || code.trim() === '// Paste your code here and click "Analyze Code"') {

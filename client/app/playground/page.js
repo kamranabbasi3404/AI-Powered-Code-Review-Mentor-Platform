@@ -22,7 +22,10 @@ export default function PlaygroundPage() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [showNewFileModal, setShowNewFileModal] = useState(false);
   const [newFileName, setNewFileName] = useState('');
+  const [showChat, setShowChat] = useState(false);
+  const [chatWidth, setChatWidth] = useState(380);
   const isDraggingRef = useRef(false);
+  const isChatDraggingRef = useRef(false);
   const chatEndRef = useRef(null);
   const socketRef = useRef(null);
   const terminalRef = useRef(null);
@@ -246,6 +249,7 @@ export default function PlaygroundPage() {
   };
 
   return (
+    <>
     <div className="playground-layout">
       {/* LEFT: Workspace (Sidebar + Editor) */}
       <div className="playground-left" style={{ flexDirection: 'row' }}>
@@ -345,57 +349,7 @@ export default function PlaygroundPage() {
             />
           </div>
         </div>
-        </div>
       </div>
-      
-      {/* RIGHT: AI Mentor Chat */}
-      <div className="playground-right">
-        <div className="chat-header">
-          <h3 className="chat-title">
-            <span style={{ color: 'var(--accent-light)' }}>✨</span> AI Mentor
-          </h3>
-        </div>
-        
-        <div className="chat-messages">
-          {messages.length === 0 && (
-            <div style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '20px', fontSize: '0.9rem' }}>
-              <p>Hello! I am your AI Mentor.</p>
-              <p style={{ marginTop: '10px' }}>Ask me any questions about your code, logic, or concepts. I will guide you without writing the code for you.</p>
-            </div>
-          )}
-          {messages.map((msg, idx) => (
-            <div key={idx} className={`chat-bubble ${msg.role}`}>
-              {msg.content}
-            </div>
-          ))}
-          {isTyping && (
-            <div className="chat-bubble assistant" style={{ color: 'var(--text-muted)' }}>
-              <div style={{ display: 'flex', gap: '4px', alignItems: 'center', height: '24px' }}>
-                <span className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }}></span>
-                <span>Thinking...</span>
-              </div>
-            </div>
-          )}
-          <div ref={chatEndRef} />
-        </div>
-        
-        <div className="chat-input-area">
-          <div className="chat-input-wrapper">
-            <input 
-              id="mentor-chat-input"
-              name="mentor-chat-input"
-              type="text" 
-              className="chat-input"
-              value={input} 
-              onChange={(e) => setInput(e.target.value)} 
-              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              placeholder="Ask for guidance..." 
-            />
-            <button className="btn btn-primary chat-send-btn" onClick={handleSend} disabled={!input.trim() || isTyping}>
-              Send
-            </button>
-          </div>
-        </div>
       </div>
 
       {showNewFileModal && (
@@ -421,5 +375,105 @@ export default function PlaygroundPage() {
         </div>
       )}
     </div>
+
+    {/* RIGHT: AI Mentor Chat (Outside layout for proper positioning) */}
+    {showChat && (
+      <div className="playground-right" style={{ position: 'fixed', top: '64px', right: 0, bottom: 0, zIndex: 40, width: `${chatWidth}px` }}>
+        {/* Resize Handle */}
+        <div 
+          style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '5px', cursor: 'col-resize', background: 'transparent', zIndex: 5 }}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            isChatDraggingRef.current = true;
+            document.body.style.cursor = 'col-resize';
+            const handleMove = (ev) => {
+              if (!isChatDraggingRef.current) return;
+              const newWidth = window.innerWidth - ev.clientX;
+              if (newWidth >= 280 && newWidth <= 700) setChatWidth(newWidth);
+            };
+            const handleUp = () => {
+              isChatDraggingRef.current = false;
+              document.body.style.cursor = 'default';
+              document.removeEventListener('mousemove', handleMove);
+              document.removeEventListener('mouseup', handleUp);
+            };
+            document.addEventListener('mousemove', handleMove);
+            document.addEventListener('mouseup', handleUp);
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.background = 'var(--accent)'}
+          onMouseLeave={(e) => { if (!isChatDraggingRef.current) e.currentTarget.style.background = 'transparent'; }}
+        />
+        <div className="chat-header">
+          <h3 className="chat-title">
+            <span style={{ color: 'var(--accent-light)' }}>✨</span> AI Mentor
+          </h3>
+          <button onClick={() => setShowChat(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }} title="Close Chat">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+        <div className="chat-messages">
+          {messages.length === 0 && (
+            <div style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '20px', fontSize: '0.9rem' }}>
+              <p>Hello! I am your AI Mentor.</p>
+              <p style={{ marginTop: '10px' }}>Ask me any questions about your code, logic, or concepts. I will guide you without writing the code for you.</p>
+            </div>
+          )}
+          {messages.map((msg, idx) => (
+            <div key={idx} className={`chat-bubble ${msg.role}`}>
+              {msg.content}
+            </div>
+          ))}
+          {isTyping && (
+            <div className="chat-bubble assistant" style={{ color: 'var(--text-muted)' }}>
+              <div style={{ display: 'flex', gap: '4px', alignItems: 'center', height: '24px' }}>
+                <span className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }}></span>
+                <span>Thinking...</span>
+              </div>
+            </div>
+          )}
+          <div ref={chatEndRef} />
+        </div>
+        <div className="chat-input-area">
+          <div className="chat-input-wrapper">
+            <input 
+              id="mentor-chat-input"
+              name="mentor-chat-input"
+              type="text" 
+              className="chat-input"
+              value={input} 
+              onChange={(e) => setInput(e.target.value)} 
+              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+              placeholder="Ask for guidance..." 
+            />
+            <button className="btn btn-primary chat-send-btn" onClick={handleSend} disabled={!input.trim() || isTyping}>
+              Send
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Floating AI Mentor Toggle Button */}
+    {!showChat && (
+      <button 
+        onClick={() => setShowChat(true)} 
+        title="Open AI Mentor"
+        style={{ 
+          position: 'fixed', bottom: '20px', right: '20px', 
+          width: '52px', height: '52px', borderRadius: '50%', 
+          background: 'linear-gradient(135deg, var(--accent), var(--accent-light))', 
+          border: 'none', color: '#fff', cursor: 'pointer', 
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 4px 20px rgba(124, 58, 237, 0.5)',
+          transition: 'transform 0.2s, box-shadow 0.2s',
+          zIndex: 50
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.boxShadow = '0 6px 25px rgba(124, 58, 237, 0.7)'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(124, 58, 237, 0.5)'; }}
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+      </button>
+    )}
+    </>
   );
 }

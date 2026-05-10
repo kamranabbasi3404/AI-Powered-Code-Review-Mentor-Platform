@@ -677,6 +677,9 @@ code, pre { font-family: 'JetBrains Mono', monospace; }
   border-bottom: 1px solid var(--border);
   background: rgba(10, 10, 15, 0.6);
   backdrop-filter: blur(10px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 .chat-title {
   font-size: 1.15rem;
