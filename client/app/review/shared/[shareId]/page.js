@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import ScoreCard from '@/components/ScoreCard';
 import IssueCard from '@/components/IssueCard';
+import CodeDiffViewer from '@/components/CodeDiffViewer';
 
 export default function SharedReviewPage() {
   const { shareId } = useParams();
@@ -57,23 +58,12 @@ export default function SharedReviewPage() {
         </div>
       </div>
 
-      <div className="code-display">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-          <h2>Updated Code (100% Fixed)</h2>
-          <button 
-            className="btn btn-secondary" 
-            onClick={handleCopyCode}
-            style={{ padding: '6px 12px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}
-          >
-            {copied ? (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            ) : (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            )}
-            {copied ? 'Copied!' : 'Copy Code'}
-          </button>
-        </div>
-        <pre><code>{review.updatedCode || review.code}</code></pre>
+      <div className="code-display" style={{ padding: 0, background: 'transparent', border: 'none' }}>
+        <CodeDiffViewer 
+          originalCode={review.code} 
+          modifiedCode={review.updatedCode || review.code} 
+          language={review.language} 
+        />
       </div>
     </div>
   );
