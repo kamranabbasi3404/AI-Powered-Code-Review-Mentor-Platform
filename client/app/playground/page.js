@@ -11,7 +11,8 @@ import { io } from 'socket.io-client';
 export default function PlaygroundPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
-  const [code, setCode] = useState('// Write your code here\n');
+  const [files, setFiles] = useState([{ id: '1', name: 'main.js', content: '// Write your code here\n' }]);
+  const [activeFileId, setActiveFileId] = useState('1');
   const [language, setLanguage] = useState('javascript');
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -19,35 +20,42 @@ export default function PlaygroundPage() {
   const [isRunning, setIsRunning] = useState(false);
   const [terminalHeight, setTerminalHeight] = useState(160);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [showNewFileModal, setShowNewFileModal] = useState(false);
+  const [newFileName, setNewFileName] = useState('');
   const isDraggingRef = useRef(false);
   const chatEndRef = useRef(null);
   const socketRef = useRef(null);
   const terminalRef = useRef(null);
 
+  const socketInitRef = useRef(false);
+
   useEffect(() => {
-    // Socket.IO needs the base server URL, not the /api path
+    if (socketInitRef.current) return;
+    socketInitRef.current = true;
+
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     const socketUrl = apiUrl.replace(/\/api\/?$/, '');
     
-    socketRef.current = io(socketUrl, {
+    const socket = io(socketUrl, {
       withCredentials: true
     });
+    socketRef.current = socket;
 
-    socketRef.current.on('connect_error', (err) => {
+    socket.on('connect', () => {
+      console.log('[Playground] Socket connected! ID:', socket.id);
+    });
+
+    socket.on('connect_error', (err) => {
       console.error('[Playground] Socket connection error:', err.message);
     });
 
-    socketRef.current.on('output', (data) => {
+    socket.on('output', (data) => {
       if (terminalRef.current) terminalRef.current.write(data);
     });
 
-    socketRef.current.on('exit', () => {
+    socket.on('exit', () => {
       setIsRunning(false);
     });
-
-    return () => {
-      if (socketRef.current) socketRef.current.disconnect();
-    };
   }, []);
 
   // Available languages for playground
@@ -57,41 +65,55 @@ export default function PlaygroundPage() {
     if (!authLoading && !user) router.push('/');
   }, [user, authLoading, router]);
 
-  // Load state from localStorage on mount
+  // Load state from sessionStorage on mount
   useEffect(() => {
-    const savedCode = localStorage.getItem('playground_code');
-    if (savedCode) setCode(savedCode);
-    const savedLang = localStorage.getItem('playground_language');
+    const savedFiles = sessionStorage.getItem('playground_files');
+    if (savedFiles) {
+      try {
+        const parsed = JSON.parse(savedFiles);
+        if (parsed && parsed.length > 0) setFiles(parsed);
+      } catch(e) {}
+    } else {
+      const savedCode = sessionStorage.getItem('playground_code');
+      if (savedCode) setFiles([{ id: '1', name: 'main.js', content: savedCode }]);
+    }
+    
+    const savedActiveId = sessionStorage.getItem('playground_active_file');
+    if (savedActiveId) setActiveFileId(savedActiveId);
+    
+    const savedLang = sessionStorage.getItem('playground_language');
     if (savedLang) setLanguage(savedLang);
-    const savedMsgs = localStorage.getItem('playground_messages');
+    
+    const savedMsgs = sessionStorage.getItem('playground_messages');
     if (savedMsgs) {
       try { setMessages(JSON.parse(savedMsgs)); } catch (e) {}
     }
-    const savedHeight = localStorage.getItem('playground_terminal_height');
+    const savedHeight = sessionStorage.getItem('playground_terminal_height');
     if (savedHeight) setTerminalHeight(parseInt(savedHeight, 10));
     
     setIsLoaded(true);
   }, []);
 
-  // Save state to localStorage whenever it changes
+  // Save state to sessionStorage whenever it changes
   useEffect(() => {
     if (!isLoaded) return;
-    localStorage.setItem('playground_code', code);
-  }, [code, isLoaded]);
+    sessionStorage.setItem('playground_files', JSON.stringify(files));
+    sessionStorage.setItem('playground_active_file', activeFileId);
+  }, [files, activeFileId, isLoaded]);
 
   useEffect(() => {
     if (!isLoaded) return;
-    localStorage.setItem('playground_language', language);
+    sessionStorage.setItem('playground_language', language);
   }, [language, isLoaded]);
 
   useEffect(() => {
     if (!isLoaded) return;
-    localStorage.setItem('playground_messages', JSON.stringify(messages));
+    sessionStorage.setItem('playground_messages', JSON.stringify(messages));
   }, [messages, isLoaded]);
 
   useEffect(() => {
     if (!isLoaded) return;
-    localStorage.setItem('playground_terminal_height', terminalHeight.toString());
+    sessionStorage.setItem('playground_terminal_height', terminalHeight.toString());
   }, [terminalHeight, isLoaded]);
 
   useEffect(() => {
@@ -130,8 +152,9 @@ export default function PlaygroundPage() {
     setIsTyping(true);
 
     try {
+      const activeFile = files.find(f => f.id === activeFileId) || files[0];
       const response = await apiPost('/ai/chat', {
-        code,
+        code: activeFile.content,
         language,
         chatHistory: [...messages, userMsg]
       });
@@ -151,40 +174,132 @@ export default function PlaygroundPage() {
       terminalRef.current.clear();
       terminalRef.current.write('Running code...\r\n');
     }
-    socketRef.current.emit('run_code', { code, language });
+    const activeFile = files.find(f => f.id === activeFileId) || files[0];
+    
+    if (!socketRef.current || !socketRef.current.connected) {
+      if (terminalRef.current) terminalRef.current.write('\r\n\x1b[31mError: Not connected to server. Please refresh the page.\x1b[0m\r\n');
+      setIsRunning(false);
+      return;
+    }
+    
+    console.log('[Playground] Emitting run_code', { 
+      socketId: socketRef.current.id, 
+      connected: socketRef.current.connected, 
+      language, 
+      filesCount: files.length 
+    });
+    socketRef.current.emit('run_code', { code: activeFile.content, files, language });
   };
 
   if (authLoading) return <div className="loading-container"><div className="spinner" /></div>;
   if (!user) return null;
 
+  const activeFile = files.find(f => f.id === activeFileId) || files[0];
+
+  const handleCreateFile = () => {
+    setShowNewFileModal(true);
+    setNewFileName('');
+  };
+
+  const confirmCreateFile = () => {
+    const name = newFileName.trim();
+    if (!name) {
+      toast.error('File name cannot be empty');
+      return;
+    }
+    if (files.some(f => f.name === name)) {
+      toast.error('File already exists');
+      return;
+    }
+    const newFile = { id: Date.now().toString(), name, content: '' };
+    setFiles([...files, newFile]);
+    setActiveFileId(newFile.id);
+    setShowNewFileModal(false);
+  };
+
+  const handleDeleteFile = (e, id) => {
+    e.stopPropagation();
+    if (files.length === 1) return toast.error('Cannot delete the last file');
+    const newFiles = files.filter(f => f.id !== id);
+    setFiles(newFiles);
+    if (activeFileId === id) setActiveFileId(newFiles[0].id);
+  };
+
+  const setCode = (newContent) => {
+    setFiles(files.map(f => f.id === activeFileId ? { ...f, content: newContent } : f));
+  };
+
   return (
     <div className="playground-layout">
-      {/* LEFT: Code Editor */}
-      <div className="playground-left">
-        <div className="editor-toolbar" style={{ padding: '10px 15px' }}>
-          <div className="editor-toolbar-left">
-            <select 
-              id="playground-language"
-              name="playground-language"
-              value={language} 
-              onChange={(e) => setLanguage(e.target.value)}
-              style={{ background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border)', padding: '6px 12px', borderRadius: '6px', outline: 'none' }}
-            >
-              {PLAYGROUND_LANGUAGES.map(l => (
-                <option key={l} value={l}>{l === 'cpp' ? 'C++' : l.charAt(0).toUpperCase() + l.slice(1)}</option>
-              ))}
-            </select>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase' }}>Code Playground</span>
-            <button className="btn btn-primary" onClick={handleRunCode} disabled={isRunning} style={{ padding: '6px 16px', fontSize: '0.8rem' }}>
-              {isRunning ? 'Running...' : 'Run Code ▶'}
+      {/* LEFT: Workspace (Sidebar + Editor) */}
+      <div className="playground-left" style={{ flexDirection: 'row' }}>
+        
+        {/* Workspace Sidebar */}
+        <div style={{ width: '220px', borderRight: '1px solid var(--border)', background: 'var(--bg-tertiary)', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '12px 15px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>EXPLORER</span>
+            <button onClick={handleCreateFile} className="btn-icon" style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', padding: '4px' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
             </button>
           </div>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}>
+            {files.map(f => (
+              <div 
+                key={f.id} 
+                onClick={() => setActiveFileId(f.id)}
+                style={{ 
+                  padding: '6px 15px', 
+                  fontSize: '0.85rem', 
+                  cursor: 'pointer', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between',
+                  background: f.id === activeFileId ? 'var(--bg-glass)' : 'transparent',
+                  color: f.id === activeFileId ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  borderLeft: f.id === activeFileId ? '2px solid var(--accent-light)' : '2px solid transparent'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
+                  <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.name}</span>
+                </div>
+                {files.length > 1 && (
+                  <button onClick={(e) => handleDeleteFile(e, f.id)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', padding: '2px', cursor: 'pointer' }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
-        <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
-          <CodeEditor code={code} setCode={setCode} language={language} setLanguage={setLanguage} />
-        </div>
+
+        {/* Editor & Terminal Column */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+          <div className="editor-toolbar" style={{ padding: '10px 15px' }}>
+            <div className="editor-toolbar-left">
+              <select 
+                id="playground-language"
+                name="playground-language"
+                value={language} 
+                onChange={(e) => setLanguage(e.target.value)}
+                style={{ background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border)', padding: '6px 12px', borderRadius: '6px', outline: 'none' }}
+              >
+                {PLAYGROUND_LANGUAGES.map(l => (
+                  <option key={l} value={l}>{l === 'cpp' ? 'C++' : l.charAt(0).toUpperCase() + l.slice(1)}</option>
+                ))}
+              </select>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase' }}>{activeFile.name}</span>
+              <button className="btn btn-primary" onClick={handleRunCode} disabled={isRunning} style={{ padding: '6px 16px', fontSize: '0.8rem' }}>
+                {isRunning ? 'Running...' : 'Run Code ▶'}
+              </button>
+            </div>
+          </div>
+          <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
+            <CodeEditor code={activeFile.content} setCode={setCode} language={language} setLanguage={setLanguage} />
+          </div>
+        
         
         {/* Resizer */}
         <div 
@@ -213,6 +328,7 @@ export default function PlaygroundPage() {
               }} 
             />
           </div>
+        </div>
         </div>
       </div>
       
@@ -265,6 +381,29 @@ export default function PlaygroundPage() {
           </div>
         </div>
       </div>
+
+      {showNewFileModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h2 style={{ marginBottom: '15px' }}>Enter file name:</h2>
+            <div className="modal-url">
+              <input 
+                type="text" 
+                value={newFileName} 
+                onChange={(e) => setNewFileName(e.target.value)} 
+                onKeyDown={(e) => e.key === 'Enter' && confirmCreateFile()}
+                placeholder="e.g. utils.js"
+                autoFocus
+                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
+              />
+            </div>
+            <div className="share-buttons" style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button className="btn btn-secondary" onClick={() => setShowNewFileModal(false)}>Cancel</button>
+              <button className="btn btn-primary" onClick={confirmCreateFile}>Create</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

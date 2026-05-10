@@ -11,12 +11,15 @@ const DOCKER_IMAGES = {
 };
 
 module.exports = (io) => {
+  console.log('[Terminal] Socket handler registered!');
   io.on('connection', (socket) => {
+    console.log('[Terminal] New socket connection:', socket.id);
     let currentProcess = null;
     let currentTempDir = null;
 
     socket.on('run_code', async (data) => {
-      const { code, language } = data;
+      console.log('[Terminal] run_code received!', { language: data.language, hasFiles: !!data.files, filesCount: data.files?.length, codeLen: data.code?.length });
+      const { code, files, language } = data;
       const startTime = Date.now();
 
       if (!DOCKER_IMAGES[language]) {
@@ -31,35 +34,46 @@ module.exports = (io) => {
       try {
         await fs.mkdir(tempDir, { recursive: true });
 
-        let fileName, cmd, args;
+        let defaultFileName, cmd, args;
         const volumePath = process.platform === 'win32' ? tempDir.split(path.sep).join('/') : tempDir;
 
         switch (language) {
           case 'python':
-            fileName = 'main.py';
+            defaultFileName = 'main.py';
             cmd = 'docker';
-            // -u forces unbuffered output in python so prompts show up instantly
             args = ['run', '-i', '--rm', '--memory=128m', '--cpus=0.5', '-v', `${volumePath}:/app`, '-w', '/app', DOCKER_IMAGES.python, 'python', '-u', 'main.py'];
             break;
           case 'javascript':
-            fileName = 'main.js';
+            defaultFileName = 'main.js';
             cmd = 'docker';
             args = ['run', '-i', '--rm', '--memory=128m', '--cpus=0.5', '-v', `${volumePath}:/app`, '-w', '/app', DOCKER_IMAGES.javascript, 'node', 'main.js'];
             break;
           case 'java':
-            fileName = 'Main.java';
+            defaultFileName = 'Main.java';
             cmd = 'docker';
-            args = ['run', '-i', '--rm', '--memory=256m', '--cpus=0.5', '-v', `${volumePath}:/app`, '-w', '/app', DOCKER_IMAGES.java, 'sh', '-c', 'javac Main.java && java Main'];
+            args = ['run', '-i', '--rm', '--memory=256m', '--cpus=0.5', '-v', `${volumePath}:/app`, '-w', '/app', DOCKER_IMAGES.java, 'sh', '-c', 'javac *.java && java Main'];
             break;
           case 'cpp':
-            fileName = 'main.cpp';
+            defaultFileName = 'main.cpp';
             cmd = 'docker';
-            args = ['run', '-i', '--rm', '--memory=256m', '--cpus=0.5', '-v', `${volumePath}:/app`, '-w', '/app', DOCKER_IMAGES.cpp, 'sh', '-c', 'g++ main.cpp -o main && ./main'];
+            args = ['run', '-i', '--rm', '--memory=256m', '--cpus=0.5', '-v', `${volumePath}:/app`, '-w', '/app', DOCKER_IMAGES.cpp, 'sh', '-c', 'g++ *.cpp -o main && ./main'];
             break;
         }
 
-        await fs.writeFile(path.join(tempDir, fileName), code);
+        // Write multiple files if provided, otherwise write the single code string
+        if (files && Array.isArray(files) && files.length > 0) {
+          for (const file of files) {
+            // sanitize filename to prevent directory traversal
+            const safeName = path.basename(file.name);
+            console.log(`[Terminal] Writing file: ${safeName} (${file.content.length} chars)`);
+            await fs.writeFile(path.join(tempDir, safeName), file.content);
+          }
+        } else {
+          console.log(`[Terminal] Writing single file: ${defaultFileName}`);
+          await fs.writeFile(path.join(tempDir, defaultFileName), code || '');
+        }
 
+        console.log(`[Terminal] Spawning: ${cmd} ${args.join(' ')}`);
         currentProcess = spawn(cmd, args);
 
         currentProcess.stdout.on('data', (data) => {
