@@ -79,8 +79,8 @@ export default function ScoreCard({ scores }) {
       </div>
       {categories.map((cat, i) => (
         <div key={cat.key} className={`scorecard-item animate-in delay-${i+1}`}>
-          <div className="scorecard-label" style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
-            <CategoryIcon type={cat.key} /> {cat.label}
+          <div className="scorecard-label" style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center', whiteSpace: 'nowrap' }}>
+            <CategoryIcon type={cat.key} /> <span>{cat.label}</span>
           </div>
           <div className="scorecard-value" style={{ color: getScoreColor(scores[cat.key]) }}>
             {scores[cat.key]}
