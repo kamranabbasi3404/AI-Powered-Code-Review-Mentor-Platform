@@ -17,7 +17,7 @@ export default function PlaygroundPage() {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
-  const [terminalHeight, setTerminalHeight] = useState(250);
+  const [terminalHeight, setTerminalHeight] = useState(160);
   const [isLoaded, setIsLoaded] = useState(false);
   const isDraggingRef = useRef(false);
   const chatEndRef = useRef(null);
